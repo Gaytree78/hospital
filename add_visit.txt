@@ -1,0 +1,32 @@
+<?php
+include "db.php";
+
+header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(["status" => "error", "message" => "Invalid request"]);
+    exit;
+}
+
+$patient_id = $_POST['patient_id'] ?? '';
+$symptoms   = $_POST['symptoms']   ?? '';
+$diagnosis  = $_POST['diagnosis']  ?? '';
+$notes      = $_POST['notes']      ?? '';
+
+if (empty($patient_id)) {
+    echo json_encode(["status" => "error", "message" => "Patient ID required"]);
+    exit;
+}
+
+$sql = $conn->prepare("
+    INSERT INTO patient_visits (patient_id, visit_date, symptoms, diagnosis, notes)
+    VALUES (?, CURDATE(), ?, ?, ?)
+");
+$sql->bind_param("isss", $patient_id, $symptoms, $diagnosis, $notes);
+
+if ($sql->execute()) {
+    echo json_encode(["status" => "success", "message" => "Visit recorded"]);
+} else {
+    echo json_encode(["status" => "error", "message" => $conn->error]);
+}
+?>
